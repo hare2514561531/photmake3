@@ -1,0 +1,2698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>警報画像作成ツール</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* リセットとベーススタイル */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #e0e7ff 100%);
+            min-height: 100vh;
+            color: #334155;
+        }
+
+        .app {
+            min-height: 100vh;
+        }
+
+        /* ナビゲーション */
+        .nav-tabs {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 0 2rem;
+            display: flex;
+            gap: 0;
+        }
+
+        .nav-tab {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab:hover {
+            color: #3b82f6;
+            background: #f1f5f9;
+        }
+
+        .nav-tab.active {
+            color: white;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-bottom-color: #1d4ed8;
+        }
+
+        /* タブコンテンツ */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* コンテナ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ヘッダー */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b, #1e40af, #4338ca);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #e2e8f0;
+            color: #475569;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* メイングリッド */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 設定パネル */
+        .settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* タブ */
+        .tabs {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .tab-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .tab-button:hover {
+            background: #f1f5f9;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+        }
+
+        .tab-panel {
+            display: none;
+            padding: 0;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        /* カード */
+        .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-header h3 {
+            color: #1e293b;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* フォーム */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .color-input-group {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .color-input-group input[type="color"] {
+            width: 4rem;
+            height: 3rem;
+            padding: 0.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            cursor: pointer;
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #64748b;
+            background: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ボタン */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: white;
+            color: #3b82f6;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-outline:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .btn-large {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.125rem;
+        }
+
+        .btn-danger {
+            color: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #fef2f2;
+            border-color: #dc2626;
+        }
+
+        /* SNSボタン */
+        .btn-twitter {
+            background: #1da1f2;
+            color: white;
+        }
+
+        .btn-facebook {
+            background: #4267b2;
+            color: white;
+        }
+
+        .btn-line {
+            background: #00b900;
+            color: white;
+        }
+
+        /* プレビューパネル */
+        .preview-panel .card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .canvas-container {
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background: white;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #alert-canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .canvas-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        /* ログイン画面 */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .login-header {
+            text-align: center;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 2rem;
+        }
+
+        .login-icon {
+            width: 4rem;
+            height: 4rem;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 2rem;
+        }
+
+        .login-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .login-content {
+            padding: 2rem;
+        }
+
+        .password-input {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .demo-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #dbeafe;
+            border-radius: 0.5rem;
+        }
+
+        .demo-info p {
+            font-size: 0.875rem;
+            color: #1e40af;
+            margin-bottom: 0.25rem;
+        }
+
+        .demo-info .small {
+            font-size: 0.75rem;
+            color: #3b82f6;
+        }
+
+        /* ダッシュボード */
+        .dashboard-container {
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1e293b, #64748b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dashboard-header p {
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* 統計カード */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            border-radius: 1rem;
+            padding: 1.5rem;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-blue {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .stat-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .stat-purple {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .stat-orange {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .stat-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-info p {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-info h3 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .stat-content i {
+            font-size: 2rem;
+            opacity: 0.6;
+        }
+
+        .stat-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            opacity: 0.8;
+        }
+
+        /* 検索 */
+        .search-container {
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            position: relative;
+            max-width: 500px;
+        }
+
+        .search-input i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .search-input input {
+            padding-left: 2.5rem;
+            padding-right: 2.5rem;
+        }
+
+        .clear-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        /* 管理タブ */
+        .admin-tabs {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .admin-tab-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .admin-tab {
+            background: none;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .admin-tab:hover {
+            background: #f1f5f9;
+        }
+
+        .admin-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+        }
+
+        .admin-tab-panel {
+            display: none;
+            padding: 2rem;
+        }
+
+        .admin-tab-panel.active {
+            display: block;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .panel-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* テーブル */
+        .table-container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1e293b;
+        }
+
+        .data-table tr:hover {
+            background: rgba(248, 250, 252, 0.5);
+        }
+
+        .data-table .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .data-table .btn {
+            padding: 0.5rem;
+            min-width: 2rem;
+            height: 2rem;
+        }
+
+        /* バッジ */
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-draft {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .status-archived {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .role-admin {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .role-editor {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .role-viewer {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        /* 設定グリッド */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* 共有ボタン */
+        .share-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .share-info {
+            font-size: 0.875rem;
+            color: #64748b;
+            background: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+
+        /* トースト通知 */
+        #toast-container {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .toast {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.5rem;
+            border-left: 4px solid #10b981;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast.error {
+            border-left-color: #dc2626;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .toast-message {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                justify-content: stretch;
+            }
+
+            .header-actions .btn {
+                flex: 1;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-tab-list {
+                grid-template-columns: 1fr;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .share-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .data-table {
+                min-width: 600px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-tabs {
+                padding: 0 1rem;
+            }
+
+            .nav-tab {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            .modal-content {
+                margin: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+
+            #toast-container {
+                top: 1rem;
+                right: 1rem;
+                left: 1rem;
+            }
+
+            .toast {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ナビゲーション -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="generator">
+                <i class="fas fa-image"></i>
+                画像作成
+            </button>
+            <button class="nav-tab" data-tab="admin">
+                <i class="fas fa-shield-alt"></i>
+                管理画面
+            </button>
+        </nav>
+
+        <!-- 画像作成タブ -->
+        <div id="generator" class="tab-content active">
+            <div class="container">
+                <div class="header">
+                    <h1>警報画像作成ツール</h1>
+                    <p>プロフェッショナルな警報画像を簡単に作成。地名の自動改行機能付き。</p>
+                    <span class="badge">Professional Edition</span>
+                </div>
+
+                <div class="main-grid">
+                    <!-- 設定パネル -->
+                    <div class="settings-panel">
+                        <div class="tabs">
+                            <div class="tab-list">
+                                <button class="tab-button active" data-settings-tab="basic">
+                                    <i class="fas fa-cog"></i>
+                                    基本
+                                </button>
+                                <button class="tab-button" data-settings-tab="design">
+                                    <i class="fas fa-palette"></i>
+                                    デザイン
+                                </button>
+                                <button class="tab-button" data-settings-tab="text">
+                                    <i class="fas fa-font"></i>
+                                    テキスト
+                                </button>
+                            </div>
+
+                            <!-- 基本設定 -->
+                            <div id="basic" class="tab-panel active">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-exclamation-triangle"></i> 警報設定</h3>
+                                        <p>警報の種類を選択すると、適切なメッセージが自動設定されます</p>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="form-group">
+                                            <label for="alert-type">警報の種類</label>
+                                            <select id="alert-type" class="form-control">
+                                                <option value="heavyRain">大雨警報</option>
+                                                <option value="heavyRainSpecial" selected>大雨特別警報</option>
+                                                <option value="flood">洪水警報</option>
+                                                <option value="storm">暴風警報</option>
+                                                <option value="tsunami">津波警報</option>
+                                                <option value="tsunamiSpecial">大津波警報</option>
+                                                <option value="earthquake">地震警報</option>
+                                                <option value="fire">火災警報</option>
+                                                <option value="thunder">雷警報</option>
+                                                <option value="volcano">火山警報</option>
+                                                <option value="heatwave">熱中症警報</option>
+                                                <option value="general">一般警報</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="target-area">対象地域</label>
+                                            <textarea id="target-area" class="form-control" rows="3" placeholder="対象地域を入力（改行で複数地域を指定可能）">名古屋市</textarea>
+                                            <div class="help-text">
+                                                💡 地名は適切な位置で自動改行されます。「浜松市」が「浜」と「松市」に分かれることはありません。
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- デザイン設定 -->
+                            <div id="design" class="tab-panel">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-palette"></i> 色設定</h3>
+                                        <p>背景色と文字色をカスタマイズできます</p>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="form-group">
+                                            <label for="bg-color">背景色</label>
+                                            <div class="color-input-group">
+                                                <input type="color" id="bg-color" value="#dc2626">
+                                                <input type="text" id="bg-color-text" value="#dc2626" class="form-control">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="text-color">文字色</label>
+                                            <div class="color-input-group">
+                                                <input type="color" id="text-color" value="#ffffff">
+                                                <input type="text" id="text-color-text" value="#ffffff" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- テキスト設定 -->
+                            <div id="text" class="tab-panel">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3><i class="fas fa-font"></i> テキスト設定</h3>
+                                        <p>メッセージとクレジットの設定</p>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="form-group">
+                                            <label for="message">メッセージ</label>
+                                            <textarea id="message" class="form-control" rows="3" placeholder="警報メッセージを入力（改行可能）">命を守る行動を！</textarea>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label for="credit">クレジット</label>
+                                            <input type="text" id="credit" class="form-control" placeholder="画像制作者名を入力" value="画像制作: EWC画像制作部">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="download-btn" class="btn btn-primary btn-large">
+                            <i class="fas fa-download"></i>
+                            高品質画像をダウンロード
+                        </button>
+
+                        <button id="share-btn" class="btn btn-outline btn-large">
+                            <i class="fas fa-share"></i>
+                            画像を共有
+                        </button>
+                    </div>
+
+                    <!-- プレビュー -->
+                    <div class="preview-panel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>リアルタイムプレビュー</h3>
+                                <p>作成される警報画像のプレビューです（横向きB4サイズ）</p>
+                            </div>
+                            <div class="card-content">
+                                <div class="canvas-container">
+                                    <canvas id="alert-canvas" width="2060" height="1456"></canvas>
+                                </div>
+                                <div class="canvas-info">
+                                    <span>解像度: 2060 × 1456px</span>
+                                    <span>形式: PNG (高品質)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理画面タブ -->
+        <div id="admin" class="tab-content">
+            <!-- ログイン画面 -->
+            <div id="admin-login" class="login-container">
+                <div class="login-card">
+                    <div class="login-header">
+                        <div class="login-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h2>管理者認証</h2>
+                        <p>管理画面にアクセスするにはパスワードが必要です</p>
+                    </div>
+                    <div class="login-content">
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label for="admin-password">管理者パスワード</label>
+                                <div class="password-input">
+                                    <input type="password" id="admin-password" class="form-control" placeholder="パスワードを入力してください" required>
+                                    <button type="button" id="toggle-password" class="password-toggle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-large" id="login-btn">
+                                ログイン
+                            </button>
+                        </form>
+                        <div class="demo-info">
+                            <p><strong>デモ用パスワード:</strong> admin2024</p>
+                            <p class="small">実際の運用では強力なパスワードを設定してください</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 管理ダッシュボード -->
+            <div id="admin-dashboard" class="dashboard-container" style="display: none;">
+                <div class="container">
+                    <div class="dashboard-header">
+                        <div>
+                            <h1>管理ダッシュボード</h1>
+                            <p>警報画像作成システムの統合管理</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" id="export-btn">
+                                <i class="fas fa-file-export"></i>
+                                エクスポート
+                            </button>
+                            <button class="btn btn-outline" id="import-btn">
+                                <i class="fas fa-file-import"></i>
+                                インポート
+                            </button>
+                            <input type="file" id="import-file" accept=".json" style="display: none;">
+                            <button class="btn btn-outline btn-danger" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                ログアウト
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 統計カード -->
+                    <div class="stats-grid">
+                        <div class="stat-card stat-blue">
+                            <div class="stat-content">
+                                <div class="stat-info">
+                                    <p>総テンプレート数</p>
+                                    <h3 id="total-templates">0</h3>
+                                </div>
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-footer">
+                                <i class="fas fa-trending-up"></i>
+                                <span>アクティブ: <span id="active-templates">0</span></span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-green">
+                            <div class="stat-content">
+                                <div class="stat-info">
+                                    <p>登録ユーザー数</p>
+                                    <h3 id="total-users">0</h3>
+                                </div>
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-footer">
+                                <i class="fas fa-chart-line"></i>
+                                <span>管理者: <span id="admin-users">0</span></span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-purple">
+                            <div class="stat-content">
+                                <div class="stat-info">
+                                    <p>総使用回数</p>
+                                    <h3 id="total-usage">0</h3>
+                                </div>
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="stat-footer">
+                                <i class="fas fa-trending-up"></i>
+                                <span>今月の使用</span>
+                            </div>
+                        </div>
+
+                        <div class="stat-card stat-orange">
+                            <div class="stat-content">
+                                <div class="stat-info">
+                                    <p>作成画像数</p>
+                                    <h3 id="total-alerts">0</h3>
+                                </div>
+                                <i class="fas fa-download"></i>
+                            </div>
+                            <div class="stat-footer">
+                                <i class="fas fa-trending-up"></i>
+                                <span>総作成数</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 検索バー -->
+                    <div class="search-container">
+                        <div class="search-input">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-input" placeholder="テンプレート、ユーザーを検索...">
+                            <button id="clear-search" class="clear-btn" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- メインコンテンツタブ -->
+                    <div class="admin-tabs">
+                        <div class="admin-tab-list">
+                            <button class="admin-tab active" data-admin-tab="templates">テンプレート管理</button>
+                            <button class="admin-tab" data-admin-tab="users">ユーザー管理</button>
+                            <button class="admin-tab" data-admin-tab="settings">システム設定</button>
+                        </div>
+
+                        <!-- テンプレート管理 -->
+                        <div id="templates" class="admin-tab-panel active">
+                            <div class="panel-header">
+                                <h2>テンプレート管理</h2>
+                                <button class="btn btn-primary" id="add-template-btn">
+                                    <i class="fas fa-plus"></i>
+                                    新規テンプレート
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>テンプレート名</th>
+                                            <th>種類</th>
+                                            <th>使用回数</th>
+                                            <th>最終使用</th>
+                                            <th>ステータス</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="templates-table">
+                                        <!-- テンプレートデータがここに挿入されます -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- ユーザー管理 -->
+                        <div id="users" class="admin-tab-panel">
+                            <div class="panel-header">
+                                <h2>ユーザー管理</h2>
+                                <button class="btn btn-primary" id="add-user-btn">
+                                    <i class="fas fa-plus"></i>
+                                    新規ユーザー
+                                </button>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ユーザー名</th>
+                                            <th>メールアドレス</th>
+                                            <th>権限</th>
+                                            <th>最終アクセス</th>
+                                            <th>作成数</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="users-table">
+                                        <!-- ユーザーデータがここに挿入されます -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- システム設定 -->
+                        <div id="settings" class="admin-tab-panel">
+                            <h2>システム設定</h2>
+                            <div class="settings-grid">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3>基本設定</h3>
+                                        <p>システムの基本的な設定</p>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="form-group">
+                                            <label for="system-name">システム名</label>
+                                            <input type="text" id="system-name" class="form-control" value="警報画像作成システム">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="max-users">最大ユーザー数</label>
+                                            <input type="number" id="max-users" class="form-control" value="100">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="storage-limit">ストレージ制限 (GB)</label>
+                                            <input type="number" id="storage-limit" class="form-control" value="50">
+                                        </div>
+                                        <button class="btn btn-primary" id="save-basic-settings">
+                                            <i class="fas fa-save"></i>
+                                            設定を保存
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3>通知設定</h3>
+                                        <p>システム通知の設定</p>
+                                    </div>
+                                    <div class="card-content">
+                                        <div class="form-group">
+                                            <label for="email-notifications">メール通知</label>
+                                            <input type="email" id="email-notifications" class="form-control" value="admin@example.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="alert-threshold">警告閾値</label>
+                                            <input type="number" id="alert-threshold" class="form-control" value="1000">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="backup-frequency">バックアップ頻度</label>
+                                            <input type="text" id="backup-frequency" class="form-control" value="毎日">
+                                        </div>
+                                        <button class="btn btn-primary" id="save-notification-settings">
+                                            <i class="fas fa-save"></i>
+                                            設定を保存
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">モーダルタイトル</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- モーダルコンテンツがここに挿入されます -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 共有モーダル -->
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-share"></i> 警報画像を共有</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>作成した警報画像を様々な方法で共有できます</p>
+                <div class="share-buttons">
+                    <button class="btn btn-twitter" id="share-twitter">
+                        <i class="fab fa-twitter"></i>
+                        Twitter
+                    </button>
+                    <button class="btn btn-facebook" id="share-facebook">
+                        <i class="fab fa-facebook"></i>
+                        Facebook
+                    </button>
+                    <button class="btn btn-line" id="share-line">
+                        <i class="fab fa-line"></i>
+                        LINE
+                    </button>
+                    <button class="btn btn-outline" id="share-email">
+                        <i class="fas fa-envelope"></i>
+                        メール
+                    </button>
+                </div>
+                <div class="share-info">
+                    💡 共有すると、警報画像の設定情報も一緒に送信されます
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- トースト通知 -->
+    <div id="toast-container"></div>
+
+    <script>
+        // アプリケーションの状態管理
+        class AlertImageApp {
+            constructor() {
+                this.config = {
+                    type: "heavyRainSpecial",
+                    level: "danger",
+                    message: "命を守る行動を！",
+                    targetArea: "名古屋市",
+                    backgroundColor: "#dc2626",
+                    textColor: "#ffffff",
+                    credit: "画像制作: EWC画像制作部",
+                };
+
+                this.alertTypes = {
+                    heavyRain: { label: "大雨警報", color: "#dc2626", defaultMessage: "命を守る行動を！" },
+                    heavyRainSpecial: { label: "大雨特別警報", color: "#dc2626", defaultMessage: "命を守る行動を！" },
+                    flood: { label: "洪水警報", color: "#2563eb", defaultMessage: "速やかに安全な場所へ避難を！" },
+                    storm: { label: "暴風警報", color: "#7c3aed", defaultMessage: "外出を控え、頑丈な建物内に待機を！" },
+                    tsunami: { label: "津波警報", color: "#0891b2", defaultMessage: "直ちに高台へ避難を！" },
+                    tsunamiSpecial: { label: "大津波警報", color: "#0891b2", defaultMessage: "直ちに高台へ避難を！" },
+                    earthquake: { label: "地震警報", color: "#ea580c", defaultMessage: "落ち着いて身の安全を確保してください！" },
+                    fire: { label: "火災警報", color: "#dc2626", defaultMessage: "直ちに避難してください！" },
+                    thunder: { label: "雷警報", color: "#facc15", defaultMessage: "建物内に避難してください！" },
+                    volcano: { label: "火山警報", color: "#dc2626", defaultMessage: "直ちに危険区域から離れてください！" },
+                    heatwave: { label: "熱中症警報", color: "#f97316", defaultMessage: "水分をこまめに取り、涼しい場所で休憩を！" },
+                    general: { label: "一般警報", color: "#dc2626", defaultMessage: "今後の情報に注意してください！" },
+                };
+
+                this.adminData = {
+                    templates: [
+                        {
+                            id: "1",
+                            name: "大雨特別警報テンプレート",
+                            type: "heavyRainSpecial",
+                            message: "命を守る行動を！",
+                            targetArea: "全国",
+                            backgroundColor: "#dc2626",
+                            textColor: "#ffffff",
+                            usage: 245,
+                            lastUsed: "2024-01-15",
+                            status: "active",
+                            createdAt: "2024-01-01",
+                            updatedAt: "2024-01-01",
+                        },
+                        {
+                            id: "2",
+                            name: "津波警報テンプレート",
+                            type: "tsunami",
+                            message: "直ちに高台へ避難を！",
+                            targetArea: "沿岸部",
+                            backgroundColor: "#0891b2",
+                            textColor: "#ffffff",
+                            usage: 89,
+                            lastUsed: "2024-01-10",
+                            status: "active",
+                            createdAt: "2024-01-02",
+                            updatedAt: "2024-01-02",
+                        },
+                    ],
+                    users: [
+                        {
+                            id: "1",
+                            name: "田中太郎",
+                            email: "tanaka@example.com",
+                            role: "admin",
+                            lastActive: "2024-01-15",
+                            alertsCreated: 45,
+                            createdAt: "2024-01-01",
+                            updatedAt: "2024-01-01",
+                        },
+                        {
+                            id: "2",
+                            name: "佐藤花子",
+                            email: "sato@example.com",
+                            role: "editor",
+                            lastActive: "2024-01-14",
+                            alertsCreated: 32,
+                            createdAt: "2024-01-02",
+                            updatedAt: "2024-01-02",
+                        },
+                    ],
+                    settings: {
+                        systemName: "警報画像作成システム",
+                        maxUsers: 100,
+                        storageLimit: 50,
+                        emailNotifications: "admin@example.com",
+                        alertThreshold: 1000,
+                        backupFrequency: "毎日",
+                        lastBackup: null,
+                        updatedAt: new Date().toISOString(),
+                    },
+                };
+
+                this.isAdminAuthenticated = false;
+                this.searchQuery = "";
+
+                this.init();
+            }
+
+            init() {
+                this.loadData();
+                this.setupEventListeners();
+                this.checkAdminAuth();
+                this.drawAlert();
+            }
+
+            // データの読み込み
+            loadData() {
+                const savedTemplates = localStorage.getItem("adminTemplates");
+                const savedUsers = localStorage.getItem("adminUsers");
+                const savedSettings = localStorage.getItem("adminSettings");
+
+                if (savedTemplates) {
+                    this.adminData.templates = JSON.parse(savedTemplates);
+                }
+
+                if (savedUsers) {
+                    this.adminData.users = JSON.parse(savedUsers);
+                }
+
+                if (savedSettings) {
+                    this.adminData.settings = JSON.parse(savedSettings);
+                }
+            }
+
+            // データの保存
+            saveData() {
+                try {
+                    localStorage.setItem("adminTemplates", JSON.stringify(this.adminData.templates));
+                    localStorage.setItem("adminUsers", JSON.stringify(this.adminData.users));
+                    localStorage.setItem("adminSettings", JSON.stringify(this.adminData.settings));
+                } catch (error) {
+                    console.error("データの保存に失敗しました", error);
+                    this.showToast("エラー", "データの保存に失敗しました", "error");
+                }
+            }
+
+            // 管理者認証チェック
+            checkAdminAuth() {
+                const isAuthenticated = localStorage.getItem("adminAuthenticated") === "true";
+                const loginTime = localStorage.getItem("adminLoginTime");
+
+                if (isAuthenticated && loginTime) {
+                    const now = Date.now();
+                    const loginTimestamp = parseInt(loginTime);
+                    const sessionDuration = 24 * 60 * 60 * 1000; // 24時間
+
+                    if (now - loginTimestamp < sessionDuration) {
+                        this.isAdminAuthenticated = true;
+                        this.showAdminDashboard();
+                    } else {
+                        localStorage.removeItem("adminAuthenticated");
+                        localStorage.removeItem("adminLoginTime");
+                        this.isAdminAuthenticated = false;
+                    }
+                }
+            }
+
+            // イベントリスナーの設定
+            setupEventListeners() {
+                // ナビゲーションタブ
+                document.querySelectorAll(".nav-tab").forEach((tab) => {
+                    tab.addEventListener("click", (e) => {
+                        const tabName = e.currentTarget.dataset.tab;
+                        this.switchMainTab(tabName);
+                    });
+                });
+
+                // 設定タブ
+                document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
+                    tab.addEventListener("click", (e) => {
+                        const tabName = e.currentTarget.dataset.settingsTab;
+                        this.switchSettingsTab(tabName);
+                    });
+                });
+
+                // 管理タブ
+                document.querySelectorAll("[data-admin-tab]").forEach((tab) => {
+                    tab.addEventListener("click", (e) => {
+                        const tabName = e.currentTarget.dataset.adminTab;
+                        this.switchAdminTab(tabName);
+                    });
+                });
+
+                // フォーム要素
+                document.getElementById("alert-type").addEventListener("change", (e) => {
+                    this.handleAlertTypeChange(e.target.value);
+                });
+
+                document.getElementById("target-area").addEventListener("input", (e) => {
+                    this.config.targetArea = e.target.value;
+                    this.drawAlert();
+                });
+
+                document.getElementById("message").addEventListener("input", (e) => {
+                    this.config.message = e.target.value;
+                    this.drawAlert();
+                });
+
+                document.getElementById("credit").addEventListener("input", (e) => {
+                    this.config.credit = e.target.value;
+                    this.drawAlert();
+                });
+
+                // 色設定
+                document.getElementById("bg-color").addEventListener("change", (e) => {
+                    this.config.backgroundColor = e.target.value;
+                    document.getElementById("bg-color-text").value = e.target.value;
+                    this.drawAlert();
+                });
+
+                document.getElementById("bg-color-text").addEventListener("input", (e) => {
+                    this.config.backgroundColor = e.target.value;
+                    document.getElementById("bg-color").value = e.target.value;
+                    this.drawAlert();
+                });
+
+                document.getElementById("text-color").addEventListener("change", (e) => {
+                    this.config.textColor = e.target.value;
+                    document.getElementById("text-color-text").value = e.target.value;
+                    this.drawAlert();
+                });
+
+                document.getElementById("text-color-text").addEventListener("input", (e) => {
+                    this.config.textColor = e.target.value;
+                    document.getElementById("text-color").value = e.target.value;
+                    this.drawAlert();
+                });
+
+                // ボタン
+                document.getElementById("download-btn").addEventListener("click", () => {
+                    this.downloadImage();
+                });
+
+                document.getElementById("share-btn").addEventListener("click", () => {
+                    this.showShareModal();
+                });
+
+                // ログイン
+                document.getElementById("login-form").addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    this.handleLogin();
+                });
+
+                document.getElementById("toggle-password").addEventListener("click", () => {
+                    this.togglePasswordVisibility();
+                });
+
+                // 管理機能
+                document.getElementById("logout-btn").addEventListener("click", () => {
+                    this.handleLogout();
+                });
+
+                document.getElementById("export-btn").addEventListener("click", () => {
+                    this.exportData();
+                });
+
+                document.getElementById("import-btn").addEventListener("click", () => {
+                    document.getElementById("import-file").click();
+                });
+
+                document.getElementById("import-file").addEventListener("change", (e) => {
+                    this.importData(e);
+                });
+
+                // 検索
+                document.getElementById("search-input").addEventListener("input", (e) => {
+                    this.searchQuery = e.target.value;
+                    this.updateSearchUI();
+                    this.renderTables();
+                });
+
+                document.getElementById("clear-search").addEventListener("click", () => {
+                    this.searchQuery = "";
+                    document.getElementById("search-input").value = "";
+                    this.updateSearchUI();
+                    this.renderTables();
+                });
+
+                // モーダル
+                document.querySelectorAll(".modal-close").forEach((btn) => {
+                    btn.addEventListener("click", () => {
+                        this.hideModal();
+                    });
+                });
+
+                document.querySelectorAll(".modal").forEach((modal) => {
+                    modal.addEventListener("click", (e) => {
+                        if (e.target === modal) {
+                            this.hideModal();
+                        }
+                    });
+                });
+
+                // 共有ボタン
+                document.getElementById("share-twitter").addEventListener("click", () => {
+                    this.shareToTwitter();
+                });
+
+                document.getElementById("share-facebook").addEventListener("click", () => {
+                    this.shareToFacebook();
+                });
+
+                document.getElementById("share-line").addEventListener("click", () => {
+                    this.shareToLine();
+                });
+
+                document.getElementById("share-email").addEventListener("click", () => {
+                    this.shareByEmail();
+                });
+
+                // 新規追加ボタン
+                document.getElementById("add-template-btn").addEventListener("click", () => {
+                    this.showModal("新規テンプレート作成", this.createTemplateForm());
+                });
+
+                document.getElementById("add-user-btn").addEventListener("click", () => {
+                    this.showModal("新規ユーザー作成", this.createUserForm());
+                });
+
+                // 設定保存ボタン
+                document.getElementById("save-basic-settings").addEventListener("click", () => {
+                    this.saveBasicSettings();
+                });
+
+                document.getElementById("save-notification-settings").addEventListener("click", () => {
+                    this.saveNotificationSettings();
+                });
+            }
+
+            // メインタブの切り替え
+            switchMainTab(tabName) {
+                document.querySelectorAll(".nav-tab").forEach((tab) => {
+                    tab.classList.remove("active");
+                });
+                document.querySelectorAll(".tab-content").forEach((content) => {
+                    content.classList.remove("active");
+                });
+
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add("active");
+                document.getElementById(tabName).classList.add("active");
+
+                if (tabName === "admin" && this.isAdminAuthenticated) {
+                    this.renderAdminDashboard();
+                }
+            }
+
+            // 設定タブの切り替え
+            switchSettingsTab(tabName) {
+                document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
+                    tab.classList.remove("active");
+                });
+                document.querySelectorAll(".tab-panel").forEach((panel) => {
+                    panel.classList.remove("active");
+                });
+
+                document.querySelector(`[data-settings-tab="${tabName}"]`).classList.add("active");
+                document.getElementById(tabName).classList.add("active");
+            }
+
+            // 管理タブの切り替え
+            switchAdminTab(tabName) {
+                document.querySelectorAll(".admin-tab").forEach((tab) => {
+                    tab.classList.remove("active");
+                });
+                document.querySelectorAll(".admin-tab-panel").forEach((panel) => {
+                    panel.classList.remove("active");
+                });
+
+                document.querySelector(`[data-admin-tab="${tabName}"]`).classList.add("active");
+                document.getElementById(tabName).classList.add("active");
+
+                this.renderTables();
+            }
+
+            // 警報タイプ変更処理
+            handleAlertTypeChange(value) {
+                const alertTypeInfo = this.alertTypes[value];
+                this.config.type = value;
+                this.config.backgroundColor = alertTypeInfo.color;
+                this.config.message = alertTypeInfo.defaultMessage;
+
+                // UIの更新
+                document.getElementById("bg-color").value = alertTypeInfo.color;
+                document.getElementById("bg-color-text").value = alertTypeInfo.color;
+                document.getElementById("message").value = alertTypeInfo.defaultMessage;
+
+                this.drawAlert();
+            }
+
+            // 日本語テキストの分割
+            segmentJapaneseText(text) {
+                const locationSuffixes = [
+                    "都", "道", "府", "県", "市", "区", "町", "村", "郡", "島", "半島", "山", "川", "湖", "海", "湾", "丁目", "番地", "号",
+                ];
+                const separators = [" ", "　", "・", "、", "，", ",", "及び", "および", "と"];
+
+                const segments = [];
+                let currentSegment = "";
+
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    currentSegment += char;
+
+                    if (separators.includes(char)) {
+                        if (currentSegment.trim()) {
+                            segments.push(currentSegment.trim());
+                        }
+                        currentSegment = "";
+                        continue;
+                    }
+
+                    if (locationSuffixes.includes(char)) {
+                        const nextChar = text[i + 1];
+                        if (!nextChar || !locationSuffixes.includes(nextChar)) {
+                            if (currentSegment.trim()) {
+                                segments.push(currentSegment.trim());
+                            }
+                            currentSegment = "";
+                        }
+                    }
+                }
+
+                if (currentSegment.trim()) {
+                    segments.push(currentSegment.trim());
+                }
+
+                return segments.filter((segment) => segment.length > 0);
+            }
+
+            // テキストの折り返し処理
+            wrapTextByWords(ctx, text, maxWidth) {
+                const segments = this.segmentJapaneseText(text);
+                const lines = [];
+                let currentLine = "";
+
+                for (const segment of segments) {
+                    const testLine = currentLine + segment;
+                    const metrics = ctx.measureText(testLine);
+
+                    if (metrics.width > maxWidth && currentLine !== "") {
+                        lines.push(currentLine.trim());
+                        currentLine = segment;
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+
+                if (currentLine.trim() !== "") {
+                    lines.push(currentLine.trim());
+                }
+
+                const finalLines = [];
+                for (const line of lines) {
+                    const lineWidth = ctx.measureText(line).width;
+                    if (lineWidth > maxWidth) {
+                        const charLines = this.wrapTextByChars(ctx, line, maxWidth);
+                        finalLines.push(...charLines);
+                    } else {
+                        finalLines.push(line);
+                    }
+                }
+
+                return finalLines.length > 0 ? finalLines : [text];
+            }
+
+            // 文字単位での折り返し
+            wrapTextByChars(ctx, text, maxWidth) {
+                const lines = [];
+                let currentLine = "";
+
+                for (const char of text) {
+                    const testLine = currentLine + char;
+                    const metrics = ctx.measureText(testLine);
+
+                    if (metrics.width > maxWidth && currentLine !== "") {
+                        lines.push(currentLine);
+                        currentLine = char;
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+
+                if (currentLine !== "") {
+                    lines.push(currentLine);
+                }
+
+                return lines.length > 0 ? lines : [text];
+            }
+
+            // エリアテキストの処理
+            processAreaText(ctx, areaText, maxWidth) {
+                const inputLines = areaText.split("\n").filter((line) => line.trim() !== "");
+                const processedLines = [];
+
+                for (const line of inputLines) {
+                    const wrappedLines = this.wrapTextByWords(ctx, line.trim(), maxWidth);
+                    processedLines.push(...wrappedLines);
+                }
+
+                return processedLines;
+            }
+
+            // 色の調整
+            adjustColor(hex, amount) {
+                let r = parseInt(hex.substring(1, 3), 16);
+                let g = parseInt(hex.substring(3, 5), 16);
+                let b = parseInt(hex.substring(5, 7), 16);
+
+                r = Math.max(0, Math.min(255, r + amount));
+                g = Math.max(0, Math.min(255, g + amount));
+                b = Math.max(0, Math.min(255, b + amount));
+
+                return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+            }
+
+            // 警報画像の描画
+            drawAlert() {
+                const canvas = document.getElementById("alert-canvas");
+                if (!canvas) return;
+
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+
+                canvas.width = 2060;
+                canvas.height = 1456;
+
+                // 背景色
+                ctx.fillStyle = this.config.backgroundColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // おしゃれな背景効果
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, this.config.backgroundColor);
+                gradient.addColorStop(0.5, this.adjustColor(this.config.backgroundColor, -20));
+                gradient.addColorStop(1, this.adjustColor(this.config.backgroundColor, -40));
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 微妙なパターン効果
+                ctx.globalAlpha = 0.03;
+                for (let i = 0; i < 30; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const radius = Math.random() * 150 + 50;
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius, 0, Math.PI * 2);
+                    ctx.fillStyle = "#ffffff";
+                    ctx.fill();
+                }
+                ctx.globalAlpha = 1.0;
+
+                let currentY = 150;
+
+                // 警報名
+                const selectedType = this.alertTypes[this.config.type];
+                const alertName = selectedType.label;
+
+                ctx.fillStyle = this.config.textColor;
+                ctx.font = "bold 180px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                // テキストに影を追加
+                ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 3;
+                ctx.shadowOffsetY = 3;
+
+                ctx.fillText(alertName, canvas.width / 2, currentY);
+                currentY += 180;
+
+                // メッセージ
+                ctx.font = "bold 100px sans-serif";
+                ctx.textBaseline = "middle";
+                const messageLines = this.config.message.split("\n");
+                messageLines.forEach((line) => {
+                    ctx.fillText(line, canvas.width / 2, currentY);
+                    currentY += 120;
+                });
+                currentY += 40;
+
+                // 影をリセット
+                ctx.shadowColor = "transparent";
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+
+                // 白い横線
+                ctx.strokeStyle = this.config.textColor;
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(0, currentY);
+                ctx.lineTo(canvas.width, currentY);
+                ctx.stroke();
+                currentY += 120;
+
+                // 対象地域の処理
+                const maxBoxWidth = canvas.width - 200;
+                const minBoxWidth = 800;
+                const horizontalPadding = 60;
+                const verticalPadding = 40;
+                const lineHeight = 100;
+
+                ctx.font = "bold 80px sans-serif";
+
+                const maxTextWidth = maxBoxWidth - horizontalPadding * 2;
+                const processedLines = this.processAreaText(ctx, this.config.targetArea, maxTextWidth);
+
+                const actualTextWidth = Math.max(...processedLines.map((line) => ctx.measureText(line).width));
+                const areaBoxWidth = Math.min(maxBoxWidth, Math.max(minBoxWidth, actualTextWidth + horizontalPadding * 2));
+
+                const lineCount = processedLines.length;
+                const areaBoxHeight = lineCount * lineHeight + verticalPadding * 2;
+
+                const areaBoxX = (canvas.width - areaBoxWidth) / 2;
+                const areaBoxY = currentY - 20;
+                const cornerRadius = 40;
+
+                // 白い角丸の背景（枠線なし）
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.roundRect(areaBoxX, areaBoxY, areaBoxWidth, areaBoxHeight, cornerRadius);
+                ctx.fill();
+
+                // 対象地域のテキスト（黒文字）
+                ctx.fillStyle = "#000000";
+                ctx.font = "bold 80px sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+
+                const startY = areaBoxY + verticalPadding + lineHeight / 2;
+                processedLines.forEach((line, index) => {
+                    const textY = startY + index * lineHeight;
+                    ctx.fillText(line, canvas.width / 2, textY);
+                });
+
+                currentY = areaBoxY + areaBoxHeight + 60;
+
+                // クレジット
+                ctx.fillStyle = this.config.textColor;
+                ctx.font = "40px sans-serif";
+                ctx.textAlign = "left";
+                ctx.fillText(this.config.credit, 40, canvas.height - 40);
+            }
+
+            // 画像ダウンロード
+            downloadImage() {
+                const canvas = document.getElementById("alert-canvas");
+                if (!canvas) return;
+
+                const link = document.createElement("a");
+                link.download = `alert-${this.config.type}-${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png", 1.0);
+                link.click();
+
+                this.showToast("ダウンロード完了", "警報画像をダウンロードしました");
+            }
+
+            // 共有URL生成
+            generateShareUrl() {
+                const params = new URLSearchParams({
+                    type: this.config.type,
+                    message: this.config.message,
+                    area: this.config.targetArea,
+                    bg: this.config.backgroundColor,
+                    text: this.config.textColor,
+                });
+                return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+            }
+
+            // 共有モーダル表示
+            showShareModal() {
+                document.getElementById("share-modal").classList.add("show");
+            }
+
+            // Twitter共有
+            shareToTwitter() {
+                const url = this.generateShareUrl();
+                const text = `${this.config.message} - ${this.config.targetArea}の警報画像を作成しました`;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+            }
+
+            // Facebook共有
+            shareToFacebook() {
+                const url = this.generateShareUrl();
+                window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+            }
+
+            // LINE共有
+            shareToLine() {
+                const url = this.generateShareUrl();
+                const text = `${this.config.message} - ${this.config.targetArea}の警報画像`;
+                window.open(
+                    `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`
+                );
+            }
+
+            // メール共有
+            shareByEmail() {
+                const url = this.generateShareUrl();
+                const subject = `警報画像: ${this.config.message}`;
+                const body = `${this.config.targetArea}の警報画像を共有します。\n\n詳細: ${url}`;
+                window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+            }
+
+            // パスワード表示切り替え
+            togglePasswordVisibility() {
+                const passwordInput = document.getElementById("admin-password");
+                const toggleBtn = document.getElementById("toggle-password");
+                const icon = toggleBtn.querySelector("i");
+
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    icon.className = "fas fa-eye-slash";
+                } else {
+                    passwordInput.type = "password";
+                    icon.className = "fas fa-eye";
+                }
+            }
+
+            // ログイン処理
+            async handleLogin() {
+                const password = document.getElementById("admin-password").value;
+                const loginBtn = document.getElementById("login-btn");
+
+                loginBtn.textContent = "認証中...";
+                loginBtn.disabled = true;
+
+                // 簡単な遅延でリアルな認証体験を演出
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                if (password === "admin2024") {
+                    localStorage.setItem("adminAuthenticated", "true");
+                    localStorage.setItem("adminLoginTime", Date.now().toString());
+
+                    this.isAdminAuthenticated = true;
+                    this.showAdminDashboard();
+                    this.showToast("ログイン成功", "管理画面にアクセスしました");
+                } else {
+                    this.showToast("ログイン失敗", "パスワードが正しくありません", "error");
+                }
+
+                loginBtn.textContent = "ログイン";
+                loginBtn.disabled = false;
+                document.getElementById("admin-password").value = "";
+            }
+
+            // ログアウト処理
+            handleLogout() {
+                localStorage.removeItem("adminAuthenticated");
+                localStorage.removeItem("adminLoginTime");
+                this.isAdminAuthenticated = false;
+                this.showAdminLogin();
+                this.showToast("ログアウトしました", "管理画面からログアウトしました");
+            }
+
+            // 管理ログイン画面表示
+            showAdminLogin() {
+                document.getElementById("admin-login").style.display = "flex";
+                document.getElementById("admin-dashboard").style.display = "none";
+            }
+
+            // 管理ダッシュボード表示
+            showAdminDashboard() {
+                document.getElementById("admin-login").style.display = "none";
+                document.getElementById("admin-dashboard").style.display = "block";
+                this.renderAdminDashboard();
+            }
+
+            // 管理ダッシュボードのレンダリング
+            renderAdminDashboard() {
+                this.updateStats();
+                this.renderTables();
+            }
+
+            // 統計の更新
+            updateStats() {
+                const stats = {
+                    totalTemplates: this.adminData.templates.length,
+                    activeTemplates: this.adminData.templates.filter((t) => t.status === "active").length,
+                    totalUsers: this.adminData.users.length,
+                    adminUsers: this.adminData.users.filter((u) => u.role === "admin").length,
+                    totalUsage: this.adminData.templates.reduce((sum, t) => sum + t.usage, 0),
+                    totalAlerts: this.adminData.users.reduce((sum, u) => sum + u.alertsCreated, 0),
+                };
+
+                document.getElementById("total-templates").textContent = stats.totalTemplates;
+                document.getElementById("active-templates").textContent = stats.activeTemplates;
+                document.getElementById("total-users").textContent = stats.totalUsers;
+                document.getElementById("admin-users").textContent = stats.adminUsers;
+                document.getElementById("total-usage").textContent = stats.totalUsage.toLocaleString();
+                document.getElementById("total-alerts").textContent = stats.totalAlerts.toLocaleString();
+            }
+
+            // テーブルのレンダリング
+            renderTables() {
+                this.renderTemplatesTable();
+                this.renderUsersTable();
+            }
+
+            // テンプレートテーブルのレンダリング
+            renderTemplatesTable() {
+                const tbody = document.getElementById("templates-table");
+                const filteredTemplates = this.adminData.templates.filter(
+                    (template) =>
+                        template.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                        template.type.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                        template.message.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                        template.targetArea.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+
+                tbody.innerHTML = "";
+
+                if (filteredTemplates.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">
+                                ${this.searchQuery ? "検索条件に一致するテンプレートがありません" : "テンプレートがありません"}
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                filteredTemplates.forEach((template) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td style="font-weight: 600;">${template.name}</td>
+                        <td>${template.type}</td>
+                        <td>${template.usage.toLocaleString()}</td>
+                        <td>${template.lastUsed}</td>
+                        <td><span class="status-badge status-${template.status}">${template.status}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-outline" onclick="app.editTemplate('${template.id}')" title="編集">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline btn-danger" onclick="app.deleteTemplate('${template.id}')" title="削除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // ユーザーテーブルのレンダリング
+            renderUsersTable() {
+                const tbody = document.getElementById("users-table");
+                const filteredUsers = this.adminData.users.filter(
+                    (user) =>
+                        user.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                        user.email.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                        user.role.toLowerCase().includes(this.searchQuery.toLowerCase())
+                );
+
+                tbody.innerHTML = "";
+
+                if (filteredUsers.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #64748b;">
+                                ${this.searchQuery ? "検索条件に一致するユーザーがありません" : "ユーザーがありません"}
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                filteredUsers.forEach((user) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td style="font-weight: 600;">${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="status-badge role-${user.role}">${user.role}</span></td>
+                        <td>${user.lastActive}</td>
+                        <td>${user.alertsCreated}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-outline" onclick="app.editUser('${user.id}')" title="編集">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline btn-danger" onclick="app.deleteUser('${user.id}')" title="削除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // 検索UIの更新
+            updateSearchUI() {
+                const clearBtn = document.getElementById("clear-search");
+                if (this.searchQuery) {
+                    clearBtn.style.display = "block";
+                } else {
+                    clearBtn.style.display = "none";
+                }
+            }
+
+            // テンプレート編集
+            editTemplate(id) {
+                const template = this.adminData.templates.find((t) => t.id === id);
+                if (!template) return;
+
+                this.showModal("テンプレート編集", this.createTemplateForm(template));
+            }
+
+            // テンプレート削除
+            deleteTemplate(id) {
+                if (confirm("このテンプレートを削除しますか？この操作は元に戻せません。")) {
+                    const template = this.adminData.templates.find((t) => t.id === id);
+                    this.adminData.templates = this.adminData.templates.filter((t) => t.id !== id);
+                    this.saveData();
+                    this.renderTables();
+                    this.updateStats();
+                    this.showToast("削除完了", `${template?.name}を削除しました`);
+                }
+            }
+
+            // ユーザー編集
+            editUser(id) {
+                const user = this.adminData.users.find((u) => u.id === id);
+                if (!user) return;
+
+                this.showModal("ユーザー編集", this.createUserForm(user));
+            }
+
+            // ユーザー削除
+            deleteUser(id) {
+                if (confirm("このユーザーを削除しますか？この操作は元に戻せません。")) {
+                    const user = this.adminData.users.find((u) => u.id === id);
+                    this.adminData.users = this.adminData.users.filter((u) => u.id !== id);
+                    this.saveData();
+                    this.renderTables();
+                    this.updateStats();
+                    this.showToast("削除完了", `${user?.name}を削除しました`);
+                }
+            }
+
+            // テンプレートフォーム作成
+            createTemplateForm(template = null) {
+                const isEdit = template !== null;
+                const formData = template || {
+                    name: "",
+                    type: "heavyRainSpecial",
+                    message: "",
+                    targetArea: "",
+                    backgroundColor: "#dc2626",
+                    textColor: "#ffffff",
+                    status: "active",
+                };
+
+                return `
+                    <form id="template-form">
+                        <div class="form-group">
+                            <label for="template-name">テンプレート名</label>
+                            <input type="text" id="template-name" class="form-control" value="${formData.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-type">種類</label>
+                            <input type="text" id="template-type" class="form-control" value="${formData.type}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-message">メッセージ</label>
+                            <textarea id="template-message" class="form-control" rows="3" required>${formData.message}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-area">対象地域</label>
+                            <input type="text" id="template-area" class="form-control" value="${formData.targetArea}" required>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label for="template-bg">背景色</label>
+                                <div class="color-input-group">
+                                    <input type="color" id="template-bg" value="${formData.backgroundColor}">
+                                    <input type="text" id="template-bg-text" class="form-control" value="${formData.backgroundColor}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="template-text">文字色</label>
+                                <div class="color-input-group">
+                                    <input type="color" id="template-text" value="${formData.textColor}">
+                                    <input type="text" id="template-text-text" class="form-control" value="${formData.textColor}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="template-status">ステータス</label>
+                            <select id="template-status" class="form-control">
+                                <option value="active" ${formData.status === "active" ? "selected" : ""}>アクティブ</option>
+                                <option value="draft" ${formData.status === "draft" ? "selected" : ""}>下書き</option>
+                                <option value="archived" ${formData.status === "archived" ? "selected" : ""}>アーカイブ</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-save"></i>
+                                保存
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="app.hideModal()">
+                                <i class="fas fa-times"></i>
+                                キャンセル
+                            </button>
+                        </div>
+                    </form>
+                `;
+            }
+
+            // ユーザーフォーム作成
+            createUserForm(user = null) {
+                const isEdit = user !== null;
+                const formData = user || {
+                    name: "",
+                    email: "",
+                    role: "viewer",
+                };
+
+                return `
+                    <form id="user-form">
+                        <div class="form-group">
+                            <label for="user-name">ユーザー名</label>
+                            <input type="text" id="user-name" class="form-control" value="${formData.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-email">メールアドレス</label>
+                            <input type="email" id="user-email" class="form-control" value="${formData.email}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-role">権限</label>
+                            <select id="user-role" class="form-control">
+                                <option value="admin" ${formData.role === "admin" ? "selected" : ""}>管理者</option>
+                                <option value="editor" ${formData.role === "editor" ? "selected" : ""}>編集者</option>
+                                <option value="viewer" ${formData.role === "viewer" ? "selected" : ""}>閲覧者</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                                <i class="fas fa-save"></i>
+                                保存
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="app.hideModal()">
+                                <i class="fas fa-times"></i>
+                                キャンセル
+                            </button>
+                        </div>
+                    </form>
+                `;
+            }
+
+            // データエクスポート
+            exportData() {
+                try {
+                    const exportData = {
+                        templates: this.adminData.templates,
+                        users: this.adminData.users,
+                        settings: this.adminData.settings,
+                        exportDate: new Date().toISOString(),
+                    };
+
+                    const dataStr = JSON.stringify(exportData, null, 2);
+                    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+
+                    const exportFileName = `alert-system-export-${new Date().toISOString().split("T")[0]}.json`;
+
+                    const linkElement = document.createElement("a");
+                    linkElement.setAttribute("href", dataUri);
+                    linkElement.setAttribute("download", exportFileName);
+                    linkElement.click();
+
+                    this.showToast("エクスポート完了", "システムデータのエクスポートが完了しました");
+                } catch (error) {
+                    console.error("データのエクスポートに失敗しました", error);
+                    this.showToast("エラー", "データのエクスポートに失敗しました", "error");
+                }
+            }
+
+            // データインポート
+            importData(event) {
+                try {
+                    const file = event.target.files?.[0];
+                    if (!file) {
+                        this.showToast("エラー", "ファイルが選択されていません", "error");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const content = e.target?.result;
+                            const importedData = JSON.parse(content);
+
+                            if (importedData.templates && Array.isArray(importedData.templates)) {
+                                this.adminData.templates = importedData.templates;
+                            }
+
+                            if (importedData.users && Array.isArray(importedData.users)) {
+                                this.adminData.users = importedData.users;
+                            }
+
+                            if (importedData.settings) {
+                                this.adminData.settings = {
+                                    ...importedData.settings,
+                                    updatedAt: new Date().toISOString(),
+                                };
+                            }
+
+                            this.saveData();
+                            this.renderAdminDashboard();
+                            this.showToast("インポート完了", "システムデータのインポートが完了しました");
+                        } catch (error) {
+                            console.error("インポートデータの解析に失敗しました", error);
+                            this.showToast("エラー", "インポートデータの形式が正しくありません", "error");
+                        }
+                    };
+
+                    reader.readAsText(file);
+                } catch (error) {
+                    console.error("データのインポートに失敗しました", error);
+                    this.showToast("エラー", "データのインポートに失敗しました", "error");
+                } finally {
+                    // ファイル選択をリセット
+                    event.target.value = "";
+                }
+            }
+
+            // モーダル表示
+            showModal(title, content) {
+                document.getElementById("modal-title").textContent = title;
+                document.getElementById("modal-body").innerHTML = content;
+                document.getElementById("modal").classList.add("show");
+
+                // フォームイベントリスナーを設定
+                const form = document.querySelector("#modal form");
+                if (form) {
+                    form.addEventListener("submit", (e) => {
+                        e.preventDefault();
+                        this.handleFormSubmit(form);
+                    });
+                }
+            }
+
+            // モーダル非表示
+            hideModal() {
+                document.querySelectorAll(".modal").forEach((modal) => {
+                    modal.classList.remove("show");
+                });
+            }
+
+            // フォーム送信処理
+            handleFormSubmit(form) {
+                const formId = form.id;
+
+                if (formId === "template-form") {
+                    this.saveTemplate(form);
+                } else if (formId === "user-form") {
+                    this.saveUser(form);
+                }
+            }
+
+            // テンプレート保存
+            saveTemplate(form) {
+                const templateData = {
+                    name: document.getElementById("template-name").value,
+                    type: document.getElementById("template-type").value,
+                    message: document.getElementById("template-message").value,
+                    targetArea: document.getElementById("template-area").value,
+                    backgroundColor: document.getElementById("template-bg").value,
+                    textColor: document.getElementById("template-text").value,
+                    status: document.getElementById("template-status").value,
+                };
+
+                // 既存テンプレートの編集か新規作成かを判定
+                const existingTemplate = this.adminData.templates.find((t) => t.name === templateData.name);
+
+                if (existingTemplate) {
+                    // 編集
+                    Object.assign(existingTemplate, templateData, {
+                        updatedAt: new Date().toISOString(),
+                    });
+                    this.showToast("更新完了", `${templateData.name}を更新しました`);
+                } else {
+                    // 新規作成
+                    const newTemplate = {
+                        ...templateData,
+                        id: Date.now().toString(),
+                        usage: 0,
+                        lastUsed: new Date().toISOString().split("T")[0],
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    };
+                    this.adminData.templates.push(newTemplate);
+                    this.showToast("作成完了", `${templateData.name}を作成しました`);
+                }
+
+                this.saveData();
+                this.renderTables();
+                this.updateStats();
+                this.hideModal();
+            }
+
+            // ユーザー保存
+            saveUser(form) {
+                const userData = {
+                    name: document.getElementById("user-name").value,
+                    email: document.getElementById("user-email").value,
+                    role: document.getElementById("user-role").value,
+                };
+
+                // 既存ユーザーの編集か新規作成かを判定
+                const existingUser = this.adminData.users.find((u) => u.email === userData.email);
+
+                if (existingUser) {
+                    // 編集
+                    Object.assign(existingUser, userData, {
+                        updatedAt: new Date().toISOString(),
+                    });
+                    this.showToast("更新完了", `${userData.name}を更新しました`);
+                } else {
+                    // 新規作成
+                    const newUser = {
+                        ...userData,
+                        id: Date.now().toString(),
+                        lastActive: new Date().toISOString().split("T")[0],
+                        alertsCreated: 0,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    };
+                    this.adminData.users.push(newUser);
+                    this.showToast("作成完了", `${userData.name}を作成しました`);
+                }
+
+                this.saveData();
+                this.renderTables();
+                this.updateStats();
+                this.hideModal();
+            }
+
+            // 基本設定保存
+            saveBasicSettings() {
+                this.adminData.settings.systemName = document.getElementById("system-name").value;
+                this.adminData.settings.maxUsers = parseInt(document.getElementById("max-users").value);
+                this.adminData.settings.storageLimit = parseInt(document.getElementById("storage-limit").value);
+                this.adminData.settings.updatedAt = new Date().toISOString();
+
+                this.saveData();
+                this.showToast("設定保存", "基本設定を保存しました");
+            }
+
+            // 通知設定保存
+            saveNotificationSettings() {
+                this.adminData.settings.emailNotifications = document.getElementById("email-notifications").value;
+                this.adminData.settings.alertThreshold = parseInt(document.getElementById("alert-threshold").value);
+                this.adminData.settings.backupFrequency = document.getElementById("backup-frequency").value;
+                this.adminData.settings.updatedAt = new Date().toISOString();
+
+                this.saveData();
+                this.showToast("設定保存", "通知設定を保存しました");
+            }
+
+            // トースト通知表示
+            showToast(title, message, type = "success") {
+                const toast = document.createElement("div");
+                toast.className = `toast ${type === "error" ? "error" : ""}`;
+                toast.innerHTML = `
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                `;
+
+                const container = document.getElementById("toast-container");
+                container.appendChild(toast);
+
+                // 3秒後に自動削除
+                setTimeout(() => {
+                    toast.remove();
+                }, 3000);
+            }
+        }
+
+        // アプリケーション初期化
+        let app;
+        document.addEventListener("DOMContentLoaded", () => {
+            app = new AlertImageApp();
+        });
+    </script>
+</body>
+</html>
